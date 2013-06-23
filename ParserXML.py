@@ -1,11 +1,11 @@
+# -*- coding: utf-8 -*-
 import xml.etree.ElementTree as ET
 import re
 
 
 def TextMsgParser(raw_xml):
     XMLroot = ET.fromstring(raw_xml)
-    userName = XMLroot.find('FromUserName').text
-    content = XMLroot.find('Content').text
+    content = XMLroot.find('Content').text.encode('utf-8')
 
     # RE patterns for supported destinations
     XJKPattern = re.compile("Xin Jie Kou")
@@ -15,25 +15,24 @@ def TextMsgParser(raw_xml):
     JNPattern = re.compile("(NUAA )?Jiang Ning (Campus)?")
 
     if XJKPattern.search(content):
-        destination = "XJK"
+        destination = "Xin Jie Kou"
     elif AirportPattern.search(content):
-        destination = "Airport"
+        destination = "Nanjing Airport"
     elif SouthPattern.search(content):
-        destination = "South"
+        destination = "Nanjing South Railway Station"
     elif MGGPattern.search(content):
-        destination = "MGG"
+        destination = "Ming Gu Gong Campus"
     elif JNPattern.search(content):
-        destination = "JN"
+        destination = "Jiang Ning Campus"
     else:
-        raise Exception("Destination not found or not supported.")
+        destination = None
 
-    return (userName, destination)
+    return destination
 
 
 def GeoMsgParser(raw_xml):
     XMLroot = ET.fromstring(raw_xml)
-    userName = XMLroot.find('FromUserName').text
-    X = float(XMLroot.find('Location_X').text)
-    Y = float(XMLroot.find('Location_Y').text)
+    X = XMLroot.find('Location_X').text
+    Y = XMLroot.find('Location_Y').text
 
-    return (userName, X, Y)
+    return (X, Y)

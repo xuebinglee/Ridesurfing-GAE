@@ -1,19 +1,46 @@
+# -*- coding: utf-8 -*-
 import re
-from Parser import TextMsgParser
-from Parser import GeoMsgParser
+import xml.etree.ElementTree as ET
+from ParserXML import TextMsgParser
+from ParserXML import GeoMsgParser
+from Responder import reply
+from Responder import WechatIDMsgResponder
+from Responder import TextMsgResponder
+from Responder import GeoMsgResponder
 
 
 def Handler(raw_xml):
-    m = re.search(r"<MsgType><!\[CDATA\[(\w+)\]\]></MsgType>", raw_xml)
-    msgType = m.group(1)
+    XMLroot = ET.fromstring(raw_xml)
+    userID = XMLroot.find('FromUserName').text
+    myID = XMLroot.find('ToUserName').text
+    createTime = XMLroot.find('CreateTime').text
+    msgType = XMLroot.find('MsgType').text
+
     if msgType == 'text':
         print 'text'
-        TextMsgParser(raw_xml)
-        # TextMsgResponder
+        content = XMLroot.find('Content').text
+        namePattern = re.compile("[Ww]echat[Ii][Dd]")
+        if namePattern.search(content):
+            print 'wechatID'
+            return WechatIDMsgResponder(userID, myID, createTime, content)
+        else:
+            print 'destination'
+            destination = TextMsgParser(raw_xml)
+            if destination is None:
+                return reply(userID, myID, createTime, "Destination not found or not supported.")
+            return TextMsgResponder(userID, myID, createTime, destination)
     elif msgType == 'location':
         print 'location'
-        GeoMsgParser(raw_xml)
-        # GeoMsgResponder
+        (X, Y) = GeoMsgParser(raw_xml)
+        print 'location parsed X='+X+' Y='+Y
+        return GeoMsgResponder(userID, myID, createTime, X, Y)
+    elif msgType == 'event':
+        event = XMLroot.find('Event').text
+        if event == 'subscribe':
+            userID = XMLroot.find('FromUserName').text
+            myID = XMLroot.find('ToUserName').text
+            createTime = XMLroot.find('CreateTime').text
+            return reply(userID, myID, createTime, "Welcome! Please tell me your WechatID :)")
     else:
-        # NEED TO COME BACK LATER!!!
-        raise Exception("MESSAGE TYPE NOT RECOGNIZED.")
+
+        return reply(userID, myID, createTime, "MESSAGE TYPE NOT RECOGNIZED.")

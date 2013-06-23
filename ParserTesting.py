@@ -1,5 +1,5 @@
-from Parser import TextMsgParser
-from Parser import GeoMsgParser
+from ParserXML import TextMsgParser
+from ParserXML import GeoMsgParser
 import unittest
 
 
@@ -17,7 +17,7 @@ class ParserTests(unittest.TestCase):
         <MsgId>1234567890123456</MsgId>
         </xml>
         '''
-        self.assertEquals(TextMsgParser(xml_data), ('Lee', 'XJK'))
+        self.assertEquals(TextMsgParser(xml_data), 'XJK')
 
     def test_BasicGeoMsgTest(self):
         xml_data = '''
@@ -33,7 +33,7 @@ class ParserTests(unittest.TestCase):
         <MsgId>1234567890123456</MsgId>
         </xml>
         '''
-        self.assertEquals(GeoMsgParser(xml_data), ('Hu', 23.134521, 113.358803))
+        self.assertEquals(GeoMsgParser(xml_data), (23.134521, 113.358803))
 
 if __name__ == '__main__':
     unittest.main()
